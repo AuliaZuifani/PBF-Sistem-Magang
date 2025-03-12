@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend_sismag
+    restart: always
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - BACKEND_URL=${BACKEND_URL}
+    ports:
+      - "${BACKEND_PORT}:8080"
+    depends_on:
+      - db
+    networks:
+      - sismag_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_sismag
+    restart: always
+    environment:
+      - VITE_API_URL=${BACKEND_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+    ports:
+      - "${VITE_PORT}:5173"
+    depends_on:
+      - backend
+    networks:
+      - sismag_network
+
+  db:
+    image: mysql:8
+    container_name: mysql_sismag
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - sismag_network
+
+volumes:
+  db_data:
+
+networks:
+  sismag_network:
+    driver: bridge
