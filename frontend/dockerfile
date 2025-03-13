@@ -1,11 +1,23 @@
-FROM node:18
+FROM php:8.2-cli
 
-WORKDIR /app
+# Install Node.js untuk Vite
+RUN apt update && apt install -y nodejs npm unzip curl
 
-COPY package.json package-lock.json ./
-RUN npm install
+# Set workdir ke dalam frontend Laravel
+WORKDIR /var/www/frontend
 
+# Copy seluruh proyek frontend
 COPY . .
 
-EXPOSE 5173
-CMD ["npm", "run", "dev"]
+# Install Composer sebelum menjalankan perintah lainnya
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Install dependencies Laravel
+RUN composer install && npm install && npm run build
+
+
+# Expose port Laravel dan Vite
+EXPOSE 8000 5173
+
+# Jalankan Laravel dan Vite
+CMD php artisan serve --host=0.0.0.0 --port=8000 & npm run dev
